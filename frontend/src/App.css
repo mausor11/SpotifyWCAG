@@ -1,0 +1,275 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* App.css */
+
+body {
+  margin: 0;
+  background-color: #111;
+  color: white;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+*:focus-visible {
+  outline: 2px solid #1DB954;
+  outline-offset: 4px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  position: relative;
+}
+
+
+.wrapper {
+  max-width: 600px;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.album-img {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 40px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+}
+
+.track-title {
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+  font-size: 60px;
+  font-weight: bold;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  max-width: 100%;
+  text-align: center;
+  mask-image: linear-gradient(to right, black 90%, transparent);
+}
+
+
+.track-title::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 100%;
+}
+
+.artist-label {
+  font-size: 16px;
+  font-weight: normal;
+  color: #959595;
+}
+
+.marquee {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+@keyframes scroll-custom {
+  0% {
+    transform: translateX(0%);
+  }
+  50% {
+    transform: translateX(var(--scroll-distance));
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+
+
+.background-blur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(20px);
+  opacity: 0.3;
+  z-index: -2;
+}
+.background-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(to bottom, black, transparent);;
+  z-index: -1;
+}
+
+.controls {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 2rem;
+}
+
+
+.control-button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.control-button:hover {
+  transform: scale(1.001);
+}
+.control-button img {
+  width: 60px;
+  height: 60px;
+  filter: brightness(1) drop-shadow(0 0 15px #ffffff03);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.control-button:hover img {
+  transform: scale(1.05);
+}
+
+.top-controls {
+  width: 100%;
+  max-width: 1272px;
+  position: absolute;
+  top: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.top-button {
+  background: #2a2a2a;
+  color: #D8D8D8;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.top-button:hover {
+  background: #3C414E;
+}
+
+.top-button.gesture.on {
+  background: #4C75DD; /* niebieski Discord style */
+}
+
+.right-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.top-button .icon {
+  margin-right: 0.5rem;
+}
+
+.volume-slider {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.volume-track {
+  position: relative;
+  width: 287px;
+  height: 40px;
+  background: #1f1f1f;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 10px;
+}
+
+.volume-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 45%; /* <- symulowana głośność */
+  background: #d6d6d6;
+  border-radius: 999px;
+  z-index: 0;
+}
+
+.volume-icon {
+  z-index: 1;
+  position: relative;
+  font-size: 18px;
+  color: black;
+}
+
+
+
