@@ -91,3 +91,4 @@ def pause_or_resume():
             print("⏸️ Wstrzymano odtwarzanie.")
         else:
             print(f"⚠️ Błąd przy pauzie: {pause_resp.status_code}")
+

@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from api import get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume
-
+from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume
+import requests
 app = Flask(__name__)
 CORS(app)
 
@@ -33,5 +33,25 @@ def user():
     user = get_current_user()
     return jsonify({"display_name": user.get("display_name", "Nieznany")})
 
+@app.route('/set-volume', methods=['PUT'])
+def set_volume():
+    volume = request.args.get('volume_percent')
+    if not volume:
+        return {'error': 'Missing volume_percent'}, 400
+
+    token = get_valid_token()
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+
+    response = requests.put(
+        f'https://api.spotify.com/v1/me/player/volume?volume_percent={volume}',
+        headers=headers
+    )
+
+    if response.status_code == 204:
+        return '', 204
+    else:
+        return {'error': 'Spotify volume update failed', 'details': response.json()}, response.status_code
 if __name__ == "__main__":
     app.run(port=5000)
