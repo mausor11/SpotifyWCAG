@@ -3,3 +3,5 @@ dotenv
 pynput
 Flask
 flask-cors
+opencv-python
+mediapipe
