@@ -28,7 +28,7 @@ Many music platforms are not fully accessible for people with visual, motor or c
 
 ## 📷 Demo
 
-![demo.gif](demo-placeholder.gif)  
+![demo.gif](app.png)  
 > Live demo and YouTube walkthrough coming soon!
 
 ## 🛠️ How to Run
