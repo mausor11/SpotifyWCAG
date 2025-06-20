@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume
+from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume, set_shuffle, set_repeat, get_player_state, get_queue, play_specific_track, get_artist_albums
 import requests
+
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 @app.route("/current-track", methods=["GET"])
 def current_track():
@@ -53,5 +54,62 @@ def set_volume():
         return '', 204
     else:
         return {'error': 'Spotify volume update failed', 'details': response.json()}, response.status_code
+
+@app.route('/set-shuffle', methods=['PUT'])
+def set_shuffle_route():
+    state = request.args.get('state', 'false').lower() == 'true'
+    status, text = set_shuffle(state)
+    return ('', 204) if status == 204 else (text, status)
+
+@app.route('/set-repeat', methods=['PUT'])
+def set_repeat_route():
+    state = request.args.get('state', 'off')
+    status, text = set_repeat(state)
+    return ('', 204) if status == 204 else (text, status)
+
+@app.route('/player-state', methods=['GET'])
+def player_state():
+    data = get_player_state()
+    if not data:
+        return {'error': 'No player state'}, 204
+    return data
+
+@app.route('/queue', methods=['GET'])
+def queue():
+    data = get_queue()
+    if not data:
+        return {'error': 'No queue'}, 204
+    
+    print("--- KOLEJKA ---")
+    if 'queue' in data and data['queue']:
+        for i, track in enumerate(data['queue']):
+            track_name = track.get('name', 'Brak nazwy')
+            artist_name = track.get('artists', [{}])[0].get('name', 'Brak artysty')
+            print(f"{i+1}. {track_name} - {artist_name}")
+    else:
+        print("Kolejka jest pusta.")
+    print("---------------")
+
+    return data
+
+@app.route("/play-track", methods=["POST"])
+def play_track():
+    data = request.get_json()
+    track_uris = data.get('uris')
+    if not track_uris:
+        return jsonify({"error": "Missing track URIs"}), 400
+    
+    status, text = play_specific_track(track_uris)
+    if status not in range(200, 299):
+        return jsonify(text), status
+    return '', 204
+
+@app.route('/artist-albums/<artist_id>', methods=['GET'])
+def artist_albums(artist_id):
+    albums = get_artist_albums(artist_id)
+    if albums is None:
+        return jsonify({"error": "Could not fetch artist albums"}), 500
+    return jsonify(albums)
+
 if __name__ == "__main__":
     app.run(port=5000)

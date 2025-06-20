@@ -2,7 +2,6 @@ import cv2
 import mediapipe as mp
 import math
 import requests
-
 API_URL = "http://127.0.0.1:5000/set-volume"
 
 cap = cv2.VideoCapture(0)

@@ -23,7 +23,7 @@ def get_currently_playing():
     response = requests.get(url, headers=headers)
 
     if response.status_code == 204 or response.status_code == 202:
-        return None  # Brak aktywnego odtwarzania
+        return None
 
     data = response.json()
     track = data.get("item")
@@ -31,15 +31,33 @@ def get_currently_playing():
         return None
 
     track_name = track["name"]
-    artist_name = track["artists"][0]["name"]
+    artists = track.get("artists", [])
+    
+    artist_name_all = ", ".join([artist["name"] for artist in artists])
+    artist_name_main = artists[0]["name"] if artists else "Nieznany artysta"
+    artist_id = artists[0]["id"] if artists else None
+    
+    artist_image = None
+    if artist_id:
+        artist_url = f"https://api.spotify.com/v1/artists/{artist_id}"
+        artist_response = requests.get(artist_url, headers=headers)
+        if artist_response.status_code == 200:
+            artist_data = artist_response.json()
+            if artist_data.get("images"):
+                artist_image = artist_data["images"][0]["url"]
+
     album_image = track["album"]["images"][0]["url"] if track["album"]["images"] else None
     progress_ms = data.get("progress_ms", 0)
     is_playing = data.get("is_playing", False)
-    duration_ms = data.get("duration_ms", 0)
+    duration_ms = track.get("duration_ms", 0)
 
     return {
         "track": track_name,
-        "artist": artist_name,
+        "track_id": track.get("id"),
+        "artist": artist_name_all,
+        "artist_main": artist_name_main,
+        "artist_id": artist_id,
+        "artist_image": artist_image,
         "image": album_image,
         "progress_ms": progress_ms,
         "is_playing": is_playing,
@@ -91,4 +109,69 @@ def pause_or_resume():
             print("⏸️ Wstrzymano odtwarzanie.")
         else:
             print(f"⚠️ Błąd przy pauzie: {pause_resp.status_code}")
+
+def set_shuffle(state):
+    headers = get_headers()
+    url = f"https://api.spotify.com/v1/me/player/shuffle?state={'true' if state else 'false'}"
+    response = requests.put(url, headers=headers)
+    return response.status_code, response.text
+
+def set_repeat(state):
+    headers = get_headers()
+    url = f"https://api.spotify.com/v1/me/player/repeat?state={state}"
+    response = requests.put(url, headers=headers)
+    return response.status_code, response.text
+
+def get_player_state():
+    headers = get_headers()
+    url = "https://api.spotify.com/v1/me/player"
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        return None
+    data = response.json()
+    return {
+        'shuffle_state': data.get('shuffle_state', False),
+        'repeat_state': data.get('repeat_state', 'off'),
+        'device': data.get('device', {}),
+        'is_playing': data.get('is_playing', False),
+        'track': data.get('item', {}).get('name', ''),
+        'artist': data.get('item', {}).get('artists', [{}])[0].get('name', ''),
+        'image': (data.get('item', {}).get('album', {}).get('images', [{}])[0].get('url', '') if data.get('item', {}).get('album', {}).get('images') else ''),
+    }
+
+def get_queue():
+    headers = get_headers()
+    url = 'https://api.spotify.com/v1/me/player/queue'
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        print(f"⚠️  Błąd API Spotify przy pobieraniu kolejki: Status {response.status_code}")
+        print(f"   Odpowiedź: {response.text}")
+        return None
+    return response.json()
+
+def play_specific_track(track_uris):
+    headers = get_headers()
+    url = "https://api.spotify.com/v1/me/player/play"
+    data = {
+        "uris": track_uris
+    }
+    response = requests.put(url, headers=headers, json=data)
+    if response.status_code not in range(200, 299):
+        print(f"⚠️ Błąd przy odtwarzaniu utworu: {response.status_code} - {response.text}")
+    return response.status_code, response.text
+
+def get_artist_albums(artist_id):
+    headers = get_headers()
+    url = f"https://api.spotify.com/v1/artists/{artist_id}/albums"
+    params = {
+        'include_groups': 'album,single',
+        'limit': 3
+    }
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        return response.json().get('items', [])
+    else:
+        print(f"⚠️ Błąd API Spotify przy pobieraniu albumów artysty: Status {response.status_code}")
+        print(f"   Odpowiedź: {response.text}")
+        return None
 
