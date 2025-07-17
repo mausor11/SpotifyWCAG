@@ -175,3 +175,80 @@ def get_artist_albums(artist_id):
         print(f"   Odpowiedź: {response.text}")
         return None
 
+def get_album_tracks(album_id):
+    headers = get_headers()
+    url = f"https://api.spotify.com/v1/albums/{album_id}/tracks"
+    params = {
+        'limit': 50  # Maksymalna liczba utworów z albumu
+    }
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        tracks = response.json().get('items', [])
+        # Konwertuj na URI format wymagany przez Spotify API
+        track_uris = [f"spotify:track:{track['id']}" for track in tracks]
+        return track_uris
+    else:
+        print(f"⚠️ Błąd API Spotify przy pobieraniu utworów z albumu: Status {response.status_code}")
+        print(f"   Odpowiedź: {response.text}")
+        return None
+
+def get_user_saved_albums():
+    headers = get_headers()
+    url = "https://api.spotify.com/v1/me/albums"
+    params = {
+        'limit': 10,
+        'offset': 0
+    }
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        albums = response.json().get('items', [])
+    else:
+        print(f"⚠️ Błąd API Spotify przy pobieraniu zapisanych albumów: Status {response.status_code}")
+        print(f"   Odpowiedź: {response.text}")
+        return None
+    
+    albums_list = []
+    for album in albums:
+        album_data = album['album']
+        album_id = album_data['id']
+        album_name = album_data['name']
+        album_image = album_data['images'][0]['url'] if album_data['images'] else None
+        author = album_data['artists'][0]['name'] if album_data['artists'] else ''
+        albums_list.append({
+            'id': album_id,
+            'name': album_name,
+            'image': album_image,
+            'author': author
+        })
+    return albums_list
+
+def get_new_releases():
+    headers = get_headers()
+    url = "https://api.spotify.com/v1/browse/new-releases"
+    params = {
+        'limit': 9,
+        'offset': 0
+    }
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        albums = response.json().get('albums', {}).get('items', [])
+    else:
+        print(f"⚠️ Błąd API Spotify przy pobieraniu zapisanych albumów: Status {response.status_code}")
+        print(f"   Odpowiedź: {response.text}")
+        return None
+    
+    albums_list = []
+    for album in albums:
+        album_id = album['id']
+        album_name = album['name']
+        album_image = album['images'][0]['url'] if album['images'] else None
+        author = album['artists'][0]['name'] if album['artists'] else ''
+        albums_list.append({
+            'id': album_id,
+            'name': album_name,
+            'image': album_image,
+            'author': author
+        })
+    return albums_list
+
+print(get_new_releases())
