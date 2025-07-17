@@ -9,7 +9,7 @@ load_dotenv()
 CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SPOTIPY_CLIENT_SECRET")
 REDIRECT_URI = os.getenv("SPOTIPY_REDIRECT_URI")
-SCOPES = "user-read-private user-read-email user-read-playback-state user-modify-playback-state user-read-recently-played"
+SCOPES = "user-read-private playlist-read-private user-library-read user-read-email user-read-playback-state user-modify-playback-state user-read-recently-played"
 TOKEN_FILE = "spotify_tokens.json"
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 

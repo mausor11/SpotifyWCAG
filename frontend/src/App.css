@@ -46,10 +46,17 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
+.app-wrapper {
+  /* position: relative; - usunięte */
+}
+
 *:focus-visible {
   outline: 2px solid #1DB954;
   outline-offset: 4px;
+  white-space: nowrap;
+  border: 0;
 }
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -62,22 +69,45 @@ body {
   border: 0;
 }
 
-
-.container {
+.player-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  height: 100vh;
   position: relative;
 }
 
+.background-blur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(20px);
+  opacity: 0.3;
+  z-index: -2;
+}
+
+.background-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(to bottom, black, transparent);
+  z-index: -1;
+}
 
 .wrapper {
   max-width: 600px;
   width: 100%;
   padding: 2rem;
   text-align: center;
+  margin-top: 0; /* Usunięty margines */
 }
 
 .album-img {
@@ -98,17 +128,13 @@ body {
   position: relative;
   max-width: 100%;
   text-align: center;
-  mask-image: linear-gradient(to right, black 90%, transparent);
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
-
-.track-title::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 80px;
-  height: 100%;
+.track-title.is-scrolling {
+  mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
 }
 
 .artist-label {
@@ -122,54 +148,101 @@ body {
   white-space: nowrap;
 }
 
-@keyframes scroll-custom {
+@keyframes scroll-back-and-forth {
   0% {
-    transform: translateX(0%);
+    transform: translateX(0);
   }
-  50% {
+  35%, 55% {
     transform: translateX(var(--scroll-distance));
   }
-  100% {
-    transform: translateX(0%);
+  90% {
+    transform: translateX(0);
   }
-}
-
-
-
-.background-blur {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
-  filter: blur(20px);
-  opacity: 0.3;
-  z-index: -2;
-}
-.background-gradient {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: linear-gradient(to bottom, black, transparent);;
-  z-index: -1;
 }
 
 .controls {
-  position: absolute;
-  bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   gap: 2rem;
   font-size: 2rem;
+  transition: transform 0.3s ease;
+  justify-self: center;
 }
 
+.controls-row {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease, padding 0.3s ease, width 0.3s ease;
+}
+
+.controls-row.scrolled {
+  background-color: rgba(12, 12, 12, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 5px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: calc(100% - 40px);
+}
+
+.now-playing-bar {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  flex: 1;
+}
+
+.controls {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.controls-placeholder {
+  flex: 1;
+}
+
+.controls-row.scrolled .now-playing-bar {
+  opacity: 1;
+  visibility: visible;
+}
+
+.now-playing-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  margin-right: 12px;
+}
+
+.now-playing-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.now-playing-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.now-playing-artist {
+  font-size: 12px;
+  color: #b3b3b3;
+}
+
+.controls-row.scrolled .controls {
+  transform: scale(0.6);
+}
 
 .control-button {
   background: none;
@@ -182,6 +255,7 @@ body {
 .control-button:hover {
   transform: scale(1.001);
 }
+
 .control-button img {
   width: 60px;
   height: 60px;
@@ -195,49 +269,94 @@ body {
 
 .top-controls {
   width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 30px 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease, padding 0.3s ease;
+}
+
+.top-controls-content {
+  width: 100%;
   max-width: 1272px;
-  position: absolute;
-  top: 60px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 10;
+  padding: 0 20px;
+}
+
+.top-controls > * {
+  transition: transform 0.3s ease;
+}
+
+.top-controls.scrolled > * {
+  transform: scale(0.8);
+}
+
+.top-controls.scrolled {
+  background-color: rgba(12, 12, 12, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 10px 0;
+}
+
+.top-controls-left {
+  width: 25%;
+  display: flex;
+}
+
+.volume-slider {
+  width: 50%;
+  display: flex;
+  justify-content: center;
+}
+
+.right-buttons {
+  width: 25%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .top-button {
   background: #2a2a2a;
   color: #D8D8D8;
   border: none;
-  border-radius: 20px;
+  border-radius: 999px;
   padding: 10px 20px;
   font-size: 0.9rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   transition: background 0.2s;
+}
+
+.top-button .icon {
+  width: 20px;
+  height: 20px;
+  filter: brightness(1.1);
 }
 
 .top-button:hover {
   background: #3C414E;
 }
 
-.top-button.gesture.on {
-  background: #4C75DD; /* niebieski Discord style */
+.top-button.on {
+  background: #2655C9;
+  color: white;
 }
 
-.right-buttons {
-  display: flex;
-  gap: 0.5rem;
+.top-button.on:hover {
+  background: #3b5fd1;
 }
 
 .top-button .icon {
   margin-right: 0.5rem;
-}
-
-.volume-slider {
-  position: absolute;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
 }
 
 .volume-track {
@@ -269,6 +388,464 @@ body {
   position: relative;
   font-size: 18px;
   color: black;
+}
+
+.toggle-button {
+  flex-direction: row;
+  padding: 10px 30px;
+  text-align: left;
+}
+
+.toggle-labels {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+.main-label {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.sub-label {
+  font-size: 0.7rem;
+  color: #b3b3b3;
+}
+
+.volume-range {
+  position: absolute;
+  width: 287px;
+  height: 45px;
+  opacity: 0;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.queue-button {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.2s ease;
+}
+
+.queue-button:hover {
+  transform: translateY(-50%) scale(1.05);
+}
+
+.queue-button img {
+  width: 50px;
+  height: 50px;
+  filter: brightness(1) drop-shadow(0 0 15px #ffffff03);
+  transition: filter 0.2s ease;
+}
+
+/* commented out old styles */
+/*
+.queue-fab {
+  position: fixed;
+  right: 40px;
+  bottom: 40px;
+  background: none;
+  border: none;
+  z-index: 100;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s;
+}
+.queue-fab img {
+  width: 50px;
+  height: 50px;
+  filter: brightness(1) drop-shadow(0 0 15px #ffffff03);
+}
+.queue-fab:hover img {
+  transform: scale(1.08);
+}
+*/
+
+.queue-container {
+  width: 100%;
+  max-width: 1120px;
+  padding: 2rem;
+  margin: 5rem auto 0 auto;
+  padding-bottom: 150px;
+}
+
+.queue-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  border: none;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(5px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out, filter 0.5s ease-out;
+}
+
+.queue-item.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.queue-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transition-delay: 0s !important;
+}
+
+.queue-item-art {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+}
+
+.queue-item-info {
+  flex-grow: 1;
+  text-align: left;
+}
+
+.queue-item-title {
+  font-weight: 500;
+}
+
+.queue-item-artist {
+  font-size: 0.9rem;
+  color: #b3b3b3;
+}
+
+.queue-item-duration {
+  color: #b3b3b3;
+  font-size: 0.9rem;
+}
+
+/* --- Sekcja Artystów --- */
+
+.artist-tiles-container {
+  width: 100%;
+  max-width: 1120px;
+  padding: 2rem;
+  margin: 2rem auto 0 auto;
+}
+
+.artist-tiles-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.artist-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.artist-card {
+  background-color: #181818;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.artist-card:hover {
+  background-color: #282828;
+}
+
+.artist-card-img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.artist-card-title {
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist-card-subtitle {
+  font-size: 0.9rem;
+  color: #b3b3b3;
+  margin-top: 0.25rem;
+}
+
+/* --- Sekcja Showcase --- */
+
+.showcase-container {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1120px;
+  padding-bottom: 200px;
+  margin: 2rem auto 0 auto;
+  align-items: stretch;
+}
+
+/* Lewa strona - duża karta */
+.featured-artist-card {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background-color: #101010;
+  border-radius: 24px;
+  border: 2px solid #FFFFFF25;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.featured-artist-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent 0%, #101010 100%);
+}
+
+.featured-artist-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.featured-artist-info {
+  position: absolute;
+  bottom: 25px;
+  left: 25px;
+}
+
+.featured-artist-title {
+  font-size: 35px;
+  font-weight: bold;
+}
+
+.featured-artist-subtitle {
+  font-size: 16px;
+  color: #b3b3b3;
+}
+
+/* Prawa strona - siatka albumów */
+.album-grid-container {
+  flex: 2;
+  min-width: 0;
+  padding: 20px 30px;
+  overflow: hidden;
+  background-color: #10101080;
+  border-radius: 24px;
+  border: 2px solid #FFFFFF25;
+}
+.album-grid-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.album-card {
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  outline: none;
+}
+.album-card:hover {
+  background-color: #ffffff10;
+  transform: translateY(-2px);
+  border-color: #FFFFFF25;
+}
+.album-card:focus-visible {
+  background-color: #ffffff15;
+  border-color: #FFFFFF25;
+  transform: translateY(-2px);
+}
+.album-card:active {
+  transform: translateY(0);
+  transition: transform 0.1s ease;
+}
+.album-card-img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+.album-card-title {
+  font-weight: bold;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  min-height: 2.6em; /* 2 lines * 1.3 line-height */
+  
+  /* Truncate text to 2 lines with ellipsis */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal; /* or 'pre-wrap' if you need to preserve whitespace */
+}
+.album-card-subtitle {
+  font-size: 0.8rem;
+  color: #b3b3b3;
+  margin-top: 0.25rem;
+}
+
+/* --- HomePage --- */
+.homepage-root {
+  max-width: 1120px;
+  padding: 20px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.homepage-main-album {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: #181818;
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 32px;
+  position: relative;
+  min-height: 500px;
+}
+
+.homepage-main-album-img {
+  width: 100%;
+  height: 500px;
+  object-fit: cover;
+  border-radius: 18px 18px 0 0;
+}
+
+.homepage-main-album-info {
+  position: absolute;
+  bottom: 30px;
+  right: 40px;
+  left: auto;
+  color: #fff;
+  text-shadow: 0 2px 8px #000a;
+  text-align: right;
+}
+
+.homepage-main-album-title {
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  max-width: 90vw;
+  line-height: 1.1;
+}
+
+.homepage-main-album-author {
+  font-size: 1.1rem;
+  color: #b3b3b3;
+}
+
+.homepage-album-row {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.homepage-album-card {
+  flex: 1 1 0;
+  border-radius: 30px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 0 2px 8px #0002;
+  transition: background 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  outline: none;
+  min-width: 0;
+  max-width: calc(33% - 30px);
+}
+.homepage-album-card img {
+  border-radius: 30px;
+}
+
+.homepage-album-card:focus-visible,
+.homepage-album-card:hover {
+  background: #282828;
+  box-shadow: 0 4px 16px #0003;
+}
+
+.homepage-album-img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.homepage-album-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.homepage-album-author {
+  font-size: 0.95rem;
+  color: #b3b3b3;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 900px) {
+  .homepage-album-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .homepage-album-card {
+    width: 100%;
+  }
+}
+
+.homepage-album-row-title {
+  font-size: 35px;
+  margin: 50px 0 10px 0;
 }
 
 

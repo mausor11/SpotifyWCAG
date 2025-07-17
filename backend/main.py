@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume, set_shuffle, set_repeat, get_player_state, get_queue, play_specific_track, get_artist_albums
+from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume, set_shuffle, set_repeat, get_player_state, get_queue, play_specific_track, get_artist_albums, get_album_tracks, get_user_saved_albums, get_new_releases
 import requests
 
 app = Flask(__name__)
@@ -111,5 +111,38 @@ def artist_albums(artist_id):
         return jsonify({"error": "Could not fetch artist albums"}), 500
     return jsonify(albums)
 
+@app.route("/play-album", methods=["POST"])
+def play_album():
+    data = request.get_json()
+    album_id = data.get('album_id')
+    if not album_id:
+        return jsonify({"error": "Missing album_id"}), 400
+    
+    # Pobierz utwory z albumu
+    track_uris = get_album_tracks(album_id)
+    if not track_uris:
+        return jsonify({"error": "Could not fetch album tracks"}), 500
+    
+    # Odtwórz album
+    status, text = play_specific_track(track_uris)
+    if status not in range(200, 299):
+        return jsonify(text), status
+    return '', 204
+
+@app.route("/user-albums", methods=["GET"])
+def user_albums():
+    albums = get_user_saved_albums()
+    if albums is None:
+        return jsonify({"error": "Could not fetch user albums"}), 500
+    return jsonify(albums)
+
+@app.route("/new-releases", methods=["GET"])
+def new_releases():
+    albums = get_new_releases()
+    if albums is None:
+        return jsonify({"error": "Could not fetch new releases"}), 500
+    return jsonify(albums)
+
 if __name__ == "__main__":
     app.run(port=5000)
+

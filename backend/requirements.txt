@@ -3,5 +3,8 @@ dotenv
 pynput
 Flask
 flask-cors
+flask-socketio
 opencv-python
 mediapipe
+tensorflow
+numpy
