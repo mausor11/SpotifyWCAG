@@ -74,6 +74,16 @@ export default function HomePage() {
     }
   };
 
+  const handlePlayAlbum = async (albumId) => {
+    try {
+      await axios.post('http://127.0.0.1:5000/play-album', { album_id: albumId });
+      // Odświeżamy dane po odtworzeniu albumu
+      await fetchTrack();
+    } catch (err) {
+      console.error("❌ Błąd przy odtwarzaniu albumu:", err);
+    }
+  };
+
   const fetchPlayerState = async () => {
     try {
       const res = await axios.get('http://127.0.0.1:5000/player-state');
@@ -176,7 +186,17 @@ export default function HomePage() {
       {albumRows.map((row, rowIndex) => (
         <div className="homepage-album-row" key={rowIndex}>
           {row.map(album => (
-            <div className="homepage-album-card" key={album.id}>
+            <div className="homepage-album-card" key={album.id}
+            onClick={() => handlePlayAlbum(album.id)}
+            role="button"
+            tabIndex={0}
+            aria-label={`Odtwórz album ${album.name}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handlePlayAlbum(album.id);
+              }
+            }}>
               <img src={album.image} alt={album.name} className="homepage-album-img" />
               <div className="homepage-album-title">{album.name}</div>
               <div className="homepage-album-author">{album.author}</div>
@@ -189,7 +209,18 @@ export default function HomePage() {
       {newReleasesRows.map((row, rowIndex) => (
         <div className="homepage-album-row" key={rowIndex}>
           {row.map(album => (
-            <div className="homepage-album-card" key={album.id}>
+            <div className="homepage-album-card" key={album.id}
+            onClick={() => handlePlayAlbum(album.id)}
+            role="button"
+            tabIndex={0}
+            aria-label={`Odtwórz album ${album.name}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handlePlayAlbum(album.id);
+              }
+            }}
+          >
               <img src={album.image} alt={album.name} className="homepage-album-img" />
               <div className="homepage-album-title">{album.name}</div>
               <div className="homepage-album-author">{album.author}</div>
