@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume, set_shuffle, set_repeat, get_player_state, get_queue, play_specific_track, get_artist_albums, get_album_tracks, get_user_saved_albums, get_new_releases
+from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume, set_shuffle, set_repeat, get_player_state, get_queue, play_specific_track, get_artist_albums, get_album_tracks, get_user_saved_albums, get_new_releases, get_recently_played, get_user_saved_playlists, play_playlist, get_playlist_tracks
 import requests
 
 app = Flask(__name__)
@@ -143,6 +143,110 @@ def new_releases():
         return jsonify({"error": "Could not fetch new releases"}), 500
     return jsonify(albums)
 
+@app.route("/recently-played-tracks", methods=["GET"])
+def recently_played_tracks():
+    """Pobiera ostatnio grane utwory (nowy endpoint)"""
+    try:
+        # Użyj istniejącej funkcji z api.py
+        data = get_recently_played(limit=20)
+        
+        if data and 'items' in data:
+            tracks = []
+            
+            for item in data['items']:
+                track = item.get('track', {})
+                if track:
+                    # Formatuj czas trwania
+                    duration_ms = track.get('duration_ms', 0)
+                    duration_minutes = duration_ms // 60000
+                    duration_seconds = (duration_ms % 60000) // 1000
+                    duration = f"{duration_minutes}:{duration_seconds:02d}"
+                    
+                    tracks.append({
+                        'id': track.get('id'),
+                        'name': track.get('name'),
+                        'artist': track.get('artists', [{}])[0].get('name', 'Unknown Artist'),
+                        'album': track.get('album', {}).get('name', 'Unknown Album'),
+                        'image': track.get('album', {}).get('images', [{}])[0].get('url', ''),
+                        'duration': duration
+                    })
+            
+            return jsonify(tracks)
+        else:
+            return jsonify([])
+            
+    except Exception as e:
+        print(f"❌ Błąd pobierania ostatnio granych: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/play-single-track", methods=["POST"])
+def play_single_track():
+    """Odtwarza pojedynczy utwór (nowy endpoint)"""
+    try:
+        data = request.get_json()
+        track_id = data.get('track_id')
+        
+        if not track_id:
+            return jsonify({"error": "No track ID provided"}), 400
+        
+        # Użyj istniejącej funkcji z api.py
+        track_uris = [f'spotify:track:{track_id}']
+        status, text = play_specific_track(track_uris)
+        
+        if status in [200, 204]:
+            return jsonify({"success": True})
+        else:
+            return jsonify({"error": "Could not play track"}), status
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/user-playlists", methods=["GET"])
+def user_playlists():
+    # Pobierz parametry z query string
+    limit = request.args.get('limit', 10, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    
+    playlists = get_user_saved_playlists(limit=limit)
+    if playlists is None:
+        return jsonify({"error": "Could not fetch user playlists"}), 500
+    
+    # Formatuj playlisty podobnie jak albumy
+    playlists_list = []
+    for playlist in playlists:
+        playlist_id = playlist['id']
+        playlist_name = playlist['name']
+        playlist_image = playlist['images'][0]['url'] if playlist['images'] else None
+        owner = playlist['owner']['display_name'] if playlist['owner'] else ''
+        playlists_list.append({
+            'id': playlist_id,
+            'name': playlist_name,
+            'image': playlist_image,
+            'author': owner
+        })
+    
+    return jsonify(playlists_list)
+
+@app.route("/play-playlist", methods=["POST"])
+def play_playlist():
+    data = request.get_json()
+    playlist_id = data.get('playlist_id')
+    if not playlist_id:
+        return jsonify({"error": "Missing playlist_id"}), 400
+    
+    # Pobierz utwory z playlisty
+    track_uris = get_playlist_tracks(playlist_id)
+    if not track_uris:
+        return jsonify({"error": "Could not fetch playlist tracks"}), 500
+    print(track_uris)
+    # Odtwórz album
+    status, text = play_specific_track(track_uris)
+    if status not in range(200, 299):
+        return jsonify(text), status
+    return '', 204
+
 if __name__ == "__main__":
     app.run(port=5000)
+
+
 

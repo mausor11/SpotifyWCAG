@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import TopNav from './TopNav';
 import IconButton from './IconButton';
@@ -32,35 +32,32 @@ function chunkArray(array, size) {
   return result;
 }
 
-export default function HomePage({ currentView = 'home', onViewChange = () => {} }) {
+export default function Playlists({ currentView, onViewChange }) {
   const navigate = useNavigate();
-  const [albums, setAlbums] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [newReleases, setNewReleases] = useState([]);
-  
-  // Stany dla kontroli odtwarzania
   const [track, setTrack] = useState(null);
   const [shuffleOn, setShuffleOn] = useState(false);
   const [repeatState, setRepeatState] = useState('off');
 
   useEffect(() => {
-    async function fetchAlbums() {
-      try {
-        const res = await axios.get('http://127.0.0.1:5000/user-albums');
-        const res2 = await axios.get('http://127.0.0.1:5000/new-releases');
-        setAlbums(res.data);
-        setNewReleases(res2.data);
-      } catch (err) {
-        setAlbums([]);
-        setNewReleases([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchAlbums();
+    fetchPlaylists();
+    fetchTrack();
+    fetchPlayerState();
   }, []);
 
-  // Funkcje dla kontroli odtwarzania
+  const fetchPlaylists = async () => {
+    try {
+      const res = await axios.get('http://127.0.0.1:5000/user-playlists?limit=50');
+      setPlaylists(res.data || []);
+    } catch (err) {
+      console.error('❌ Błąd pobierania playlist:', err);
+      setPlaylists([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchTrack = async () => {
     try {
       const res = await axios.get('http://127.0.0.1:5000/current-track');
@@ -75,18 +72,6 @@ export default function HomePage({ currentView = 'home', onViewChange = () => {}
     }
   };
 
-  const handlePlayAlbum = async (albumId) => {
-    try {
-      await axios.post('http://127.0.0.1:5000/play-album', { album_id: albumId });
-      navigate('/player');
-    } catch (err) {
-      console.error("❌ Błąd przy odtwarzaniu albumu:", err);
-    }
-  };
-  const handleSwitchToPlayer = () => {
-    navigate('/player');
-  };
-
   const fetchPlayerState = async () => {
     try {
       const res = await axios.get('http://127.0.0.1:5000/player-state');
@@ -96,6 +81,18 @@ export default function HomePage({ currentView = 'home', onViewChange = () => {}
       }
     } catch (err) {
       console.error('❌ Błąd pobierania stanu shuffle/repeat:', err);
+    }
+  };
+  const handleSwitchToPlayer = () => {
+    navigate('/player');
+  };
+
+  const handlePlayPlaylist = async (playlistId) => {
+    try {
+      await axios.post('http://127.0.0.1:5000/play-playlist', { playlist_id: playlistId });
+      navigate('/player');
+    } catch (err) {
+      console.error("❌ Błąd przy odtwarzaniu playlisty:", err);
     }
   };
 
@@ -133,16 +130,7 @@ export default function HomePage({ currentView = 'home', onViewChange = () => {}
     }
   };
 
-  // Effect dla pobierania danych o utworze
-  useEffect(() => {
-    fetchTrack();
-    fetchPlayerState();
-  }, []);
-
-  const mainAlbum = albums[Math.floor(Math.random() * albums.length)];
-  const albumRows = chunkArray(albums.slice(1), 3);
-  const newReleasesRows = chunkArray(newReleases, 3);
-  
+  const playlistRows = chunkArray(playlists, 3);
   const isPlaying = track?.is_playing ?? false;
   const playIcon = isPlaying ? PlayIcon : ResumeIcon;
   const playHoverIcon = isPlaying ? PlayActive : ResumeActive;
@@ -150,78 +138,51 @@ export default function HomePage({ currentView = 'home', onViewChange = () => {}
   return (
     <div className="homepage-root">
       <TopNav currentView={currentView} onViewChange={onViewChange} />
-      <div className="homepage-main-album">
-        {mainAlbum ? (
-          <div
-            onClick={() => handlePlayAlbum(mainAlbum.id)}
-            role="button"
-            aria-label={`Odtwórz album ${mainAlbum.name}`}
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handlePlayAlbum(mainAlbum.id);
-              }
-            }}
-            style={{ cursor: 'pointer' }}
-          >
-            <img src={mainAlbum.image} alt={mainAlbum.title} className="homepage-main-album-img" />
-            <div className="homepage-main-album-info">
-              <div className="homepage-main-album-title">{mainAlbum.name}</div>
-              <div className="homepage-main-album-author">{mainAlbum.author || ''}</div>
-            </div>
-          </div>
-        ) : (
-          <div style={{width: '100%', height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Brak albumów</div>
-        )}
+      
+      <div className="albums-header">
+        <h1>Twoje playlisty</h1>
+        <p>Wszystkie playlisty z Twojej biblioteki</p>
       </div>
 
-      <div className="homepage-album-row-title">Biblioteka</div>
-      {albumRows.map((row, rowIndex) => (
-        <div className="homepage-album-row" key={rowIndex}>
-          {row.map(album => (
-            <div className="homepage-album-card" key={album.id}
-            onClick={() => handlePlayAlbum(album.id)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Odtwórz album ${album.name}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handlePlayAlbum(album.id);
-              }
-            }}>
-              <img src={album.image} alt={album.name} className="homepage-album-img" />
-              <div className="homepage-album-title">{album.name}</div>
-              <div className="homepage-album-author">{album.author}</div>
-            </div>
-          ))}
+      {loading ? (
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Ładowanie playlist...</p>
         </div>
-      ))}
-
-      <div className="homepage-album-row-title">Nowe wydania</div>
-      {newReleasesRows.map((row, rowIndex) => (
-        <div className="homepage-album-row" key={rowIndex}>
-          {row.map(album => (
-            <div className="homepage-album-card" key={album.id}
-            onClick={() => handlePlayAlbum(album.id)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Odtwórz album ${album.name}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handlePlayAlbum(album.id);
-              }
-            }}
-          >
-              <img src={album.image} alt={album.name} className="homepage-album-img" />
-              <div className="homepage-album-title">{album.name}</div>
-              <div className="homepage-album-author">{album.author}</div>
+      ) : (
+        <div className="albums-content">
+          {playlists.length > 0 ? (
+            playlistRows.map((row, rowIndex) => (
+              <div className="homepage-album-row" key={rowIndex}>
+                {row.map(playlist => (
+                  <div 
+                    className="homepage-album-card" 
+                    key={playlist.id}
+                            onClick={() => handlePlayPlaylist(playlist.id)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Odtwórz playlist ${playlist.name}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handlePlayPlaylist(playlist.id);
+                      }
+                    }}
+                  >
+                    <img src={playlist.image} alt={playlist.name} className="homepage-album-img" />
+                    <div className="homepage-album-title">{playlist.name}</div>
+                    <div className="homepage-album-author">{playlist.author}</div>
+                  </div>
+                ))}
+              </div>
+            ))
+          ) : (
+            <div className="no-albums">
+              <p>Brak playlist w bibliotece</p>
             </div>
-          ))}
+          )}
         </div>
-      ))}
+      )}
 
       {/* Pasek kontrolny na dole */}
       {track && (
@@ -229,7 +190,7 @@ export default function HomePage({ currentView = 'home', onViewChange = () => {}
           <div className="now-playing-bar">
             <img src={track.image} alt="" className="now-playing-art" />
             <div className="now-playing-info">
-              <div className="now-playing-title"
+            <div className="now-playing-title"
               onClick={handleSwitchToPlayer}
               role="button"
               tabIndex={0}

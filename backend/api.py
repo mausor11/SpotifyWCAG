@@ -174,6 +174,21 @@ def get_artist_albums(artist_id):
         print(f"⚠️ Błąd API Spotify przy pobieraniu albumów artysty: Status {response.status_code}")
         print(f"   Odpowiedź: {response.text}")
         return None
+    
+def get_user_saved_playlists(limit=10):
+    headers = get_headers()
+    url = "https://api.spotify.com/v1/me/playlists"
+    params = {
+        'limit': limit,
+        'offset': 0
+    }
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        return response.json().get('items', [])
+    else:
+        print(f"⚠️ Błąd API Spotify przy pobieraniu playlist: Status {response.status_code}")
+        print(f"   Odpowiedź: {response.text}")
+        return None
 
 def get_album_tracks(album_id):
     headers = get_headers()
@@ -192,11 +207,11 @@ def get_album_tracks(album_id):
         print(f"   Odpowiedź: {response.text}")
         return None
 
-def get_user_saved_albums():
+def get_user_saved_albums(limit=10):
     headers = get_headers()
     url = "https://api.spotify.com/v1/me/albums"
     params = {
-        'limit': 10,
+        'limit': limit,
         'offset': 0
     }
     response = requests.get(url, headers=headers, params=params)
@@ -251,4 +266,35 @@ def get_new_releases():
         })
     return albums_list
 
-print(get_new_releases())
+def play_playlist(playlist_id):
+    headers = get_headers()
+    print(playlist_id)
+    url = "https://api.spotify.com/v1/me/player/play"
+    data = {
+        "context_uri": f"spotify:playlist:{playlist_id}"
+    }
+    response = requests.put(url, headers=headers, json=data)
+    if response.status_code not in range(200, 299):
+        print(f"⚠️ Błąd przy odtwarzaniu playlisty: {response.status_code} - {response.text}")
+    return response.status_code, response.text
+
+def get_playlist_tracks(playlist_id):
+    headers = get_headers()
+    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+    params = {
+        'limit': 50  # Maksymalna liczba utworów z playlisty
+    }
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        items = response.json().get('items', [])
+        # Konwertuj na URI format wymagany przez Spotify API
+        track_uris = []
+        for item in items:
+            track = item.get('track')
+            if track and track.get('id'):
+                track_uris.append(f"spotify:track:{track['id']}")
+        return track_uris
+    else:
+        print(f"⚠️ Błąd API Spotify przy pobieraniu utworów z playlisty: Status {response.status_code}")
+        print(f"   Odpowiedź: {response.text}")
+        return None

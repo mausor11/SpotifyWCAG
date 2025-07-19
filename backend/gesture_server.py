@@ -8,7 +8,7 @@ from tensorflow.keras.models import load_model
 import threading
 import time
 import os
-from api import pause_or_resume, skip_to_next
+from api import pause_or_resume, skip_to_next, skip_to_previous 
 
 app = Flask(__name__)
 CORS(app)
@@ -21,7 +21,7 @@ hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_c
 # Ładowanie modelu
 model_path = os.path.join(os.path.dirname(__file__), 'gesture_recognition', 'src', 'model', 'model.h5')
 model = load_model(model_path)
-labels = ["close", "open", "point"]
+labels = ["close", "open", "pointer"]
 
 # Stan aplikacji
 gesture_recognition_active = False
@@ -34,6 +34,11 @@ MAX_HISTORY = 5
 last_gesture_time = 0
 GESTURE_COOLDOWN = 0.5  # 500ms przerwy między gestami
 
+# Śledzenie stabilności gestów
+current_gesture = None
+gesture_stability_count = 0
+GESTURE_STABILITY_THRESHOLD = 5  # Ile ticków gest musi być stabilny
+
 def process_gesture_sequence():
     """Analizuje historię gestów i wykrywa sekwencje"""
     if len(gesture_history) < 3:
@@ -44,23 +49,52 @@ def process_gesture_sequence():
     if recent_gestures == ['open', 'close', 'open']:
         gesture_history.clear()
         return 'open-close-open'
-    if recent_gestures == ['close', 'open', 'close']:
+    if recent_gestures == ['close', 'pointer', 'open']:
         gesture_history.clear()
-        return 'close-open-close'
+        return 'close-pointer-open'
+    if recent_gestures == ['open', 'pointer', 'close']:
+        gesture_history.clear()
+        return 'open-pointer-close'
     
     return None
 
 def add_gesture_to_history(gesture, confidence):
     """Dodaje gest do historii z lepszą logiką"""
-    global gesture_history, last_gesture_time
+    global gesture_history, last_gesture_time, current_gesture, gesture_stability_count
     
     current_time = time.time()
     
-    # Dodaj gest tylko jeśli pewność > 0.6 (obniżony próg)
+    # Dodaj gest tylko jeśli pewność > 0.4
     if confidence < 0.4:
         print(f"❌ Odrzucono gest: {gesture} (pewność: {confidence:.2f} < 0.4)")
         return
     
+    # Sprawdź stabilność gestu
+    if gesture == current_gesture:
+        gesture_stability_count += 1
+        print(f"🔒 Stabilność {gesture}: {gesture_stability_count}/{GESTURE_STABILITY_THRESHOLD}")
+    else:
+        current_gesture = gesture
+        gesture_stability_count = 1
+        print(f"🔄 Nowy gest: {gesture} (stabilność: 1)")
+    
+    # Pokaż aktualny gest w trakcie stabilizacji
+    if gesture_stability_count > 0 and gesture_stability_count < GESTURE_STABILITY_THRESHOLD:
+        print(f"⏳ W trakcie: {gesture} ({gesture_stability_count}/{GESTURE_STABILITY_THRESHOLD})")
+    
+    # Jeśli gest jest stabilny przez 5 ticków - zeruj historię i ustaw jako pierwszy
+    if gesture_stability_count >= GESTURE_STABILITY_THRESHOLD:
+        print(f"🔄 ZEROWANIE HISTORII - gest {gesture} stabilny przez 5 ticków!")
+        gesture_history.clear()
+        gesture_history.append(gesture)
+        last_gesture_time = current_time
+        gesture_stability_count = 0
+        
+        print(f"📝 Nowa historia: {gesture} | Historia: {' → '.join(gesture_history)}")
+        print(f"🎯 Sekwencja: [{gesture}, null, null]")
+        return
+    
+    # Normalne dodawanie gestów (bez wymagania 5 ticków)
     # Sprawdź cooldown - nie dodawaj gestów zbyt szybko
     if current_time - last_gesture_time < GESTURE_COOLDOWN:
         print(f"⏰ Cooldown: {gesture} (czekam {GESTURE_COOLDOWN}s)")
@@ -80,6 +114,14 @@ def add_gesture_to_history(gesture, confidence):
         gesture_history = gesture_history[-MAX_HISTORY:]
     
     print(f"📝 Dodano do historii: {gesture} | Historia: {' → '.join(gesture_history)}")
+    
+    # Pokaż aktualny stan sekwencji
+    if len(gesture_history) == 1:
+        print(f"🎯 Sekwencja: [{gesture}, null, null]")
+    elif len(gesture_history) == 2:
+        print(f"🎯 Sekwencja: [{gesture_history[0]}, {gesture_history[1]}, null]")
+    elif len(gesture_history) >= 3:
+        print(f"🎯 Sekwencja: [{gesture_history[-3]}, {gesture_history[-2]}, {gesture_history[-1]}]")
 
 def gesture_recognition_loop():
     """Główna pętla rozpoznawania gestów"""
@@ -143,6 +185,11 @@ def gesture_recognition_loop():
     print("-" * 50)
     print("🎥 Kamera zatrzymana")
     print("🎯 Rozpoznawanie gestów wyłączone")
+    
+    # Resetuj liczniki
+    global current_gesture, gesture_stability_count
+    current_gesture = None
+    gesture_stability_count = 0
 
 def handle_gesture_sequence(sequence):
     """Obsługuje wykryte sekwencje gestów"""
@@ -160,9 +207,9 @@ def handle_gesture_sequence(sequence):
             })
         except Exception as e:
             print(f"❌ Błąd przy przełączaniu play/pause: {e}")
-    elif sequence == 'close-open-close':
+    elif sequence == 'close-pointer-open':
         print("🎵" + "="*50)
-        print("🎵 WYKRYTO SEKWENCJĘ: close-open-close")
+        print("🎵 WYKRYTO SEKWENCJĘ: close-pointer-open")
         print("🎵 AKCJA: Przełączam next w Spotify")
         print("🎵" + "="*50)
         try:
@@ -174,6 +221,20 @@ def handle_gesture_sequence(sequence):
             })
         except Exception as e:
             print(f"❌ Błąd przy przełączaniu next: {e}")
+    elif sequence == 'open-pointer-close':
+        print("🎵" + "="*50)
+        print("🎵 WYKRYTO SEKWENCJĘ: open-pointer-close")
+        print("🎵 AKCJA: Przełączam previous w Spotify")
+        print("🎵" + "="*50)
+        try:
+            skip_to_previous()
+            print("✅ Previous przełączone pomyślnie!")
+            socketio.emit('spotify_action', {
+                'action': 'previous',
+                'message': 'Przełączono previous'
+            })
+        except Exception as e:
+            print(f"❌ Błąd przy przełączaniu previous: {e}")
 
 @app.route('/gestures/toggle', methods=['POST'])
 def toggle_gesture_recognition():
