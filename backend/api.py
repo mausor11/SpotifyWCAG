@@ -207,12 +207,12 @@ def get_album_tracks(album_id):
         print(f"   Odpowiedź: {response.text}")
         return None
 
-def get_user_saved_albums(limit=10):
+def get_user_saved_albums(limit=10, offset=0):
     headers = get_headers()
     url = "https://api.spotify.com/v1/me/albums"
     params = {
         'limit': limit,
-        'offset': 0
+        'offset': offset
     }
     response = requests.get(url, headers=headers, params=params)
     if response.status_code == 200:
@@ -298,3 +298,51 @@ def get_playlist_tracks(playlist_id):
         print(f"⚠️ Błąd API Spotify przy pobieraniu utworów z playlisty: Status {response.status_code}")
         print(f"   Odpowiedź: {response.text}")
         return None
+
+def search_and_play_song(song_title):
+    """Wyszukuje i odtwarza piosenkę po tytule"""
+    print(f"🔍 Wyszukuję piosenkę: '{song_title}'")
+    headers = get_headers()
+    url = "https://api.spotify.com/v1/search"
+    params = {
+        'q': song_title,
+        'type': 'track',
+        'limit': 1
+    }
+    
+    print(f"🌐 Wysyłam żądanie: {url} z parametrami: {params}")
+    response = requests.get(url, headers=headers, params=params)
+    print(f"📡 Status odpowiedzi: {response.status_code}")
+    
+    if response.status_code == 200:
+        data = response.json()
+        tracks = data.get('tracks', {}).get('items', [])
+        print(f"🎵 Znaleziono {len(tracks)} utworów")
+        
+        if tracks:
+            track = tracks[0]
+            track_uri = track['uri']
+            track_name = track['name']
+            artist_name = track['artists'][0]['name'] if track['artists'] else 'Unknown'
+            
+            print(f"🎵 Znaleziono: {track_name} - {artist_name}")
+            print(f"🔗 URI: {track_uri}")
+            
+            # Odtwórz utwór
+            print(f"▶️ Próbuję odtworzyć: {track_uri}")
+            play_response = play_specific_track([track_uri])
+            print(f"📡 Odpowiedź odtwarzania: {play_response}")
+            
+            if play_response[0] in [200, 204]:
+                print(f"✅ Odtwarzam: {track_name} - {artist_name}")
+                return True, f"Odtwarzam: {track_name} - {artist_name}"
+            else:
+                print(f"❌ Błąd odtwarzania: {play_response[1]}")
+                return False, f"Błąd odtwarzania: {play_response[1]}"
+        else:
+            print(f"❌ Nie znaleziono piosenki: {song_title}")
+            return False, f"Nie znaleziono piosenki: {song_title}"
+    else:
+        print(f"❌ Błąd wyszukiwania: {response.status_code}")
+        print(f"📄 Odpowiedź: {response.text}")
+        return False, f"Błąd wyszukiwania: {response.status_code}"

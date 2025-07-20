@@ -8,3 +8,5 @@ opencv-python
 mediapipe
 tensorflow
 numpy
+SpeechRecognition
+pyaudio

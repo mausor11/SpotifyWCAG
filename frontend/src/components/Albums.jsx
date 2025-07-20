@@ -48,7 +48,7 @@ export default function Albums({ currentView, onViewChange }) {
 
   const fetchAlbums = async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:5000/user-albums?limit=33');
+      const res = await axios.get('http://127.0.0.1:5000/user-albums?limit=50');
       setAlbums(res.data || []);
     } catch (err) {
       console.error('❌ Błąd pobierania albumów:', err);

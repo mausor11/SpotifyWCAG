@@ -42,6 +42,7 @@ export default function Player() {
 
   const [gestureOn, setGestureOn] = useState(false)
   const [micOn, setMicOn] = useState(false)
+  const [speechSocket, setSpeechSocket] = useState(null)
 
   const [volume, setVolume] = useState(50)
 
@@ -183,6 +184,15 @@ export default function Player() {
     };
   }, []);
 
+  // Cleanup dla socketów przy odmontowaniu komponentu
+  useEffect(() => {
+    return () => {
+      if (speechSocket) {
+        speechSocket.disconnect();
+      }
+    };
+  }, [speechSocket]);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
@@ -260,6 +270,90 @@ export default function Player() {
     } catch (error) {
       console.error('❌ Błąd przełączania gestów:', error);
       setGestureOn(!newState); // Cofnij stan w przypadku błędu
+    }
+  }
+
+  const handleMicToggle = async () => {
+    const newMicState = !micOn
+    setMicOn(newMicState)
+    
+    try {
+      if (newMicState) {
+        // Połącz z serwerem mowy
+        const socket = io('http://127.0.0.1:5002')
+        setSpeechSocket(socket)
+        
+        socket.on('connect', () => {
+          console.log('🎤 Połączono z serwerem mowy')
+          socket.emit('start_speech')
+        })
+        
+        socket.on('speech_command', (data) => {
+          console.log('🎤 Komenda głosowa:', data)
+          handleSpeechCommand(data)
+        })
+        
+        socket.on('speech_status', (data) => {
+          console.log('🎤 Status mowy:', data)
+        })
+        
+      } else {
+        // Rozłącz z serwerem mowy
+        if (speechSocket) {
+          speechSocket.emit('stop_speech')
+          speechSocket.disconnect()
+          setSpeechSocket(null)
+          console.log('🛑 Rozpoznawanie mowy wyłączone')
+        }
+      }
+    } catch (err) {
+      console.error('❌ Błąd połączenia z serwerem mowy:', err)
+    }
+  }
+
+  const handleSpeechCommand = async (commandData) => {
+    try {
+      const { action, song } = commandData
+      
+      switch (action) {
+        case 'next':
+          await sendControl('next')
+          console.log('🎵 Następny utwór (głos)')
+          break
+        case 'previous':
+          await sendControl('previous')
+          console.log('🎵 Poprzedni utwór (głos)')
+          break
+        case 'play':
+        case 'pause':
+          await sendControl('play')
+          console.log('🎵 Play/Pause (głos)')
+          break
+        case 'play_song':
+          if (song) {
+            console.log(`🎵 Próba odtworzenia: ${song}`)
+            try {
+              const response = await axios.post('http://127.0.0.1:5000/speech-command', {
+                action: 'play_song',
+                song: song
+              })
+              if (response.data.success) {
+                console.log(`✅ ${response.data.message}`)
+                // Odśwież dane po odtworzeniu
+                setTimeout(() => fetchTrack(), 1000)
+              } else {
+                console.log(`❌ ${response.data.message}`)
+              }
+            } catch (err) {
+              console.error('❌ Błąd odtwarzania piosenki:', err)
+            }
+          }
+          break
+        default:
+          console.log('❌ Nieznana komenda głosowa:', action)
+      }
+    } catch (err) {
+      console.error('❌ Błąd wykonania komendy głosowej:', err)
     }
   }
 
@@ -365,7 +459,7 @@ export default function Player() {
               label="Mikrofon"
               isActive={micOn}
               aria-pressed={micOn}
-              onClick={() => setMicOn(!micOn)}
+              onClick={handleMicToggle}
             />
           </div>
         </div>

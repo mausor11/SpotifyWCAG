@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume, set_shuffle, set_repeat, get_player_state, get_queue, play_specific_track, get_artist_albums, get_album_tracks, get_user_saved_albums, get_new_releases, get_recently_played, get_user_saved_playlists, play_playlist, get_playlist_tracks
+from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume, set_shuffle, set_repeat, get_player_state, get_queue, play_specific_track, get_artist_albums, get_album_tracks, get_user_saved_albums, get_new_releases, get_recently_played, get_user_saved_playlists, play_playlist, get_playlist_tracks, search_and_play_song
 import requests
 
 app = Flask(__name__)
@@ -131,7 +131,11 @@ def play_album():
 
 @app.route("/user-albums", methods=["GET"])
 def user_albums():
-    albums = get_user_saved_albums()
+    # Pobierz parametry z query string
+    limit = request.args.get('limit', 10, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    
+    albums = get_user_saved_albums(limit=limit, offset=offset)
     if albums is None:
         return jsonify({"error": "Could not fetch user albums"}), 500
     return jsonify(albums)
@@ -244,6 +248,38 @@ def play_playlist():
     if status not in range(200, 299):
         return jsonify(text), status
     return '', 204
+
+@app.route("/speech-command", methods=["POST"])
+def speech_command():
+    """Obsługuje komendy głosowe"""
+    try:
+        data = request.get_json()
+        action = data.get('action')
+        
+        if action == 'next':
+            skip_to_next()
+            return jsonify({"success": True, "action": "next"})
+        elif action == 'previous':
+            skip_to_previous()
+            return jsonify({"success": True, "action": "previous"})
+        elif action == 'play':
+            pause_or_resume()
+            return jsonify({"success": True, "action": "play"})
+        elif action == 'pause':
+            pause_or_resume()
+            return jsonify({"success": True, "action": "pause"})
+        elif action == 'play_song':
+            song_title = data.get('song')
+            if song_title:
+                success, message = search_and_play_song(song_title)
+                return jsonify({"success": success, "action": "play_song", "song": song_title, "message": message})
+            else:
+                return jsonify({"error": "No song title provided"}), 400
+        else:
+            return jsonify({"error": "Unknown action"}), 400
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(port=5000)
