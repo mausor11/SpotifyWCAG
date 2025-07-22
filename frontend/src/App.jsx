@@ -7,6 +7,7 @@ import RecentlyPlayed from './components/RecentlyPlayed';
 import Albums from './components/Albums';
 import Playlists from './components/Playlists';
 import LoginPage from './components/LoginPage';
+import AboutPage from './components/AboutPage';
 import './App.css';
 
 // Komponent do sprawdzania autoryzacji
@@ -83,7 +84,7 @@ export default function App() {
       <Routes>
         {/* Strona logowania - dostępna bez autoryzacji */}
         <Route path="/login" element={<LoginPage />} />
-        
+        <Route path="/about" element={<AboutPage />} />
         {/* Chronione trasy - wymagają autoryzacji */}
         <Route path="/" element={
           <ProtectedRoute>

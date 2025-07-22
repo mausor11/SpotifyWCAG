@@ -33,6 +33,12 @@ class ServerManager:
         
         # Server configurations
         self.servers = {
+            "auth_server": {
+                "command": [sys.executable, "auth_server.py"],
+                "cwd": self.backend_dir,
+                "port": 8888,
+                "description": "Spotify Auth Server"
+            },
             "speech_server": {
                 "command": [sys.executable, "speech_server.py"],
                 "cwd": self.backend_dir,
@@ -84,7 +90,7 @@ class ServerManager:
             return False
         
         # Check if required Python files exist
-        required_files = ["speech_server.py", "gesture_server.py", "main.py"]
+        required_files = ["auth_server.py", "speech_server.py", "gesture_server.py", "main.py"]
         for file in required_files:
             file_path = self.backend_dir / file
             if not file_path.exists():
@@ -148,7 +154,7 @@ class ServerManager:
         print("=" * 50)
         
         # Start servers in order
-        server_order = ["main_server", "speech_server", "gesture_server", "frontend"]
+        server_order = ["auth_server", "main_server", "speech_server", "gesture_server", "frontend"]
         
         for server_name in server_order:
             if server_name in self.servers:

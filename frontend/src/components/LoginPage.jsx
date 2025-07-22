@@ -43,7 +43,7 @@ export default function LoginPage() {
 
         {/* Footer z linkiem */}
         <div className="login-footer">
-          <a href="#" className="learn-more-link">
+          <a href="/about" className="learn-more-link">
             Dowiedz się więcej o aplikacji Music.
           </a>
         </div>
