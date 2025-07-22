@@ -1,7 +1,8 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, redirect
 from flask_cors import CORS
 from api import get_valid_token, get_current_user, get_currently_playing, skip_to_next, skip_to_previous, pause_or_resume, set_shuffle, set_repeat, get_player_state, get_queue, play_specific_track, get_artist_albums, get_album_tracks, get_user_saved_albums, get_new_releases, get_recently_played, get_user_saved_playlists, play_playlist, get_playlist_tracks, search_and_play_song
 import requests
+from auth import request_tokens_via_code
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -278,6 +279,40 @@ def speech_command():
         else:
             return jsonify({"error": "Unknown action"}), 400
             
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/login")
+def login():
+    from auth import CLIENT_ID, REDIRECT_URI, SCOPES
+    import urllib.parse
+
+    params = {
+        "client_id": CLIENT_ID,
+        "response_type": "code",
+        "redirect_uri": REDIRECT_URI,
+        "scope": SCOPES,
+    }
+    url = f"https://accounts.spotify.com/authorize?{urllib.parse.urlencode(params)}"
+    return redirect(url)
+
+@app.route("/callback")
+def callback():
+    code = request.args.get("code")
+    if not code:
+        return "Błąd: brak kodu", 400
+    request_tokens_via_code(code)
+    return redirect("http://localhost:3000")
+
+@app.route("/auth-status", methods=["GET"])
+def auth_status():
+    """Sprawdza czy użytkownik jest zalogowany"""
+    try:
+        import os
+        token_file = "spotify_tokens.json"
+        is_authenticated = os.path.exists(token_file)
+        
+        return jsonify({"authenticated": is_authenticated})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

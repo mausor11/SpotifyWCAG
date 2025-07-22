@@ -73,3 +73,18 @@ def get_valid_token():
         if token:
             return token
     return request_tokens_via_auth()
+
+def request_tokens_via_code(code):
+    data = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": REDIRECT_URI,
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+    }
+    response = requests.post(TOKEN_URL, data=data)
+    response_data = response.json()
+    access_token = response_data["access_token"]
+    refresh_token = response_data["refresh_token"]
+    save_tokens(refresh_token)
+    return access_token
