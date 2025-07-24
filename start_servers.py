@@ -1,17 +1,4 @@
 #!/usr/bin/env python3
-"""
-Spotify WCAG Application Startup Script
-=======================================
-
-This script starts all the necessary servers and frontend for the Spotify WCAG application:
-- Speech Server (Flask + SocketIO)
-- Gesture Server (Flask + SocketIO) 
-- Main API Server (Flask)
-- Frontend (React)
-
-Usage:
-    python start_servers.py
-"""
 
 import subprocess
 import sys
@@ -26,12 +13,10 @@ class ServerManager:
         self.processes = {}
         self.running = True
         
-        # Get the project root directory
         self.project_root = Path(__file__).parent.absolute()
         self.backend_dir = self.project_root / "backend"
         self.frontend_dir = self.project_root / "frontend"
         
-        # Server configurations
         self.servers = {
             "auth_server": {
                 "command": [sys.executable, "auth_server.py"],
@@ -65,31 +50,25 @@ class ServerManager:
             }
         }
         
-        # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
     
     def signal_handler(self, signum, frame):
-        """Handle shutdown signals"""
         print(f"\n🛑 Otrzymano sygnał {signum}. Zatrzymuję wszystkie serwery...")
         self.stop_all_servers()
         sys.exit(0)
     
     def check_dependencies(self):
-        """Check if all required dependencies are available"""
         print("🔍 Sprawdzanie zależności...")
         
-        # Check if backend directory exists
         if not self.backend_dir.exists():
             print(f"❌ Katalog backend nie istnieje: {self.backend_dir}")
             return False
         
-        # Check if frontend directory exists
         if not self.frontend_dir.exists():
             print(f"❌ Katalog frontend nie istnieje: {self.frontend_dir}")
             return False
         
-        # Check if required Python files exist
         required_files = ["auth_server.py", "speech_server.py", "gesture_server.py", "main.py"]
         for file in required_files:
             file_path = self.backend_dir / file
@@ -97,12 +76,10 @@ class ServerManager:
                 print(f"❌ Plik {file} nie istnieje w katalogu backend")
                 return False
         
-        # Check if package.json exists in frontend
         if not (self.frontend_dir / "package.json").exists():
             print(f"❌ package.json nie istnieje w katalogu frontend")
             return False
         
-        # Check if node_modules exists
         if not (self.frontend_dir / "node_modules").exists():
             print("⚠️  node_modules nie istnieje. Uruchamiam npm install...")
             try:
@@ -116,11 +93,9 @@ class ServerManager:
         return True
     
     def start_server(self, server_name, config):
-        """Start a single server"""
         try:
             print(f"🚀 Uruchamiam {config['description']}...")
             
-            # Create process
             process = subprocess.Popen(
                 config["command"],
                 cwd=config["cwd"],
@@ -133,10 +108,8 @@ class ServerManager:
             
             self.processes[server_name] = process
             
-            # Wait a bit for the server to start
             time.sleep(2)
             
-            # Check if process is still running
             if process.poll() is None:
                 print(f"✅ {config['description']} uruchomiony (PID: {process.pid})")
                 return True
@@ -149,11 +122,9 @@ class ServerManager:
             return False
     
     def start_all_servers(self):
-        """Start all servers in the correct order"""
         print("🎵 Uruchamiam Spotify WCAG Application...")
         print("=" * 50)
         
-        # Start servers in order
         server_order = ["auth_server", "main_server", "speech_server", "gesture_server", "frontend"]
         
         for server_name in server_order:
@@ -164,7 +135,6 @@ class ServerManager:
                     self.stop_all_servers()
                     return False
                 
-                # Give extra time for frontend to start
                 if server_name == "frontend":
                     time.sleep(5)
                 else:
@@ -173,7 +143,7 @@ class ServerManager:
         return True
     
     def monitor_processes(self):
-        """Monitor all running processes"""
+
         print("\n📊 Monitorowanie procesów...")
         print("=" * 50)
         
@@ -196,11 +166,10 @@ class ServerManager:
             self.stop_all_servers()
     
     def stop_all_servers(self):
-        """Stop all running servers"""
         print("\n🛑 Zatrzymuję wszystkie serwery...")
         
         for server_name, process in self.processes.items():
-            if process.poll() is None:  # Process is still running
+            if process.poll() is None:
                 print(f"🛑 Zatrzymuję {self.servers[server_name]['description']}...")
                 try:
                     process.terminate()
@@ -215,7 +184,6 @@ class ServerManager:
         print("✅ Wszystkie serwery zatrzymane")
     
     def print_status(self):
-        """Print current status of all servers"""
         print("\n📊 Status serwerów:")
         print("=" * 30)
         
@@ -224,21 +192,15 @@ class ServerManager:
             print(f"{self.servers[server_name]['description']}: {status}")
     
     def run(self):
-        """Main run method"""
         print("🎵 Spotify WCAG Application Startup Script")
         print("=" * 50)
         
-        # Check dependencies
         if not self.check_dependencies():
-            print("❌ Nie można uruchomić aplikacji - brakujące zależności")
             return False
         
-        # Start all servers
         if not self.start_all_servers():
-            print("❌ Nie udało się uruchomić wszystkich serwerów")
             return False
         
-        # Print final status
         self.print_status()
         
         print("\n🎉 Wszystkie serwery uruchomione pomyślnie!")
@@ -250,7 +212,6 @@ class ServerManager:
         print("\n💡 Naciśnij Ctrl+C aby zatrzymać wszystkie serwery")
         print("=" * 50)
         
-        # Start monitoring
         try:
             self.monitor_processes()
         except KeyboardInterrupt:
@@ -260,7 +221,6 @@ class ServerManager:
         return True
 
 def main():
-    """Main function"""
     manager = ServerManager()
     success = manager.run()
     

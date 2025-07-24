@@ -42,8 +42,8 @@ function ProtectedRoute({ children }) {
         height: '100vh',
         backgroundColor: '#000000',
         color: 'white'
-      }}>
-        <div>Ładowanie...</div>
+      }} role="status" aria-live="polite">
+        <div>Ładowanie aplikacji...</div>
       </div>
     );
   }
@@ -81,22 +81,33 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Strona logowania - dostępna bez autoryzacji */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        {/* Chronione trasy - wymagają autoryzacji */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            {renderMainContent()}
-          </ProtectedRoute>
-        } />
-        <Route path="/player" element={
-          <ProtectedRoute>
-            <Player />
-          </ProtectedRoute>
-        } />
-      </Routes>
+      <div>
+        {/* Skip link for keyboard navigation */}
+        <a href="#main-content" className="skip-link">
+          Przejdź do głównej zawartości
+        </a>
+        
+        <Routes>
+          {/* Strona logowania - dostępna bez autoryzacji */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          {/* Chronione trasy - wymagają autoryzacji */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <div id="main-content">
+                {renderMainContent()}
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/player" element={
+            <ProtectedRoute>
+              <div id="main-content">
+                <Player />
+              </div>
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }

@@ -9,7 +9,7 @@ export default function LoginPage() {
     }
 
   return (
-    <div className="login-page">
+    <div className="login-page" role="main">
       <div className="login-container">
         {/* Logo */}
         <div className="login-logo">
@@ -22,6 +22,7 @@ export default function LoginPage() {
 
         {/* Opis aplikacji */}
         <div className="login-description">
+          <h1 className="sr-only">Logowanie do Music.</h1>
           <p>
             Music. to aplikacja dostosowująca Spotify dla osób niepełnosprawnych. 
             Została usprawniona o sterowanie muzyką gestami oraz mową.
@@ -37,13 +38,14 @@ export default function LoginPage() {
         <button 
           className="login-button"
           onClick={handleLogin}
+          aria-label="Zaloguj się do Spotify"
         >
           Zaloguj się
         </button>
 
         {/* Footer z linkiem */}
         <div className="login-footer">
-          <a href="/about" className="learn-more-link">
+          <a href="/about" className="learn-more-link" aria-label="Dowiedz się więcej o aplikacji Music.">
             Dowiedz się więcej o aplikacji Music.
           </a>
         </div>

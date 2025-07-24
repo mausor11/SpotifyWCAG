@@ -426,12 +426,14 @@ export default function Player() {
         <div className="top-controls-content">
           <div className="top-controls-left">
             <button type="button" className="top-button left" aria-label="Wyjście do menu głównego" onClick={() => navigate('/')}>
-              <span className="icon">🔉</span> Exit
+              <span className="icon" aria-hidden="true">🔉</span> Exit
             </button>
           </div>
 
           <div className="volume-slider">
+            <label htmlFor="volume-control" className="sr-only">Głośność</label>
             <input
+              id="volume-control"
               type="range"
               min="0"
               max="100"
@@ -440,7 +442,7 @@ export default function Player() {
               aria-label={`Głośność: ${volume}%`}
               className="volume-range"
             />
-            <div className="volume-track">
+            <div className="volume-track" aria-hidden="true">
               <div className="volume-fill" style={{ width: `${volume}%` }}></div>
               <div className="volume-icon">🔊</div>
             </div>
@@ -490,7 +492,7 @@ export default function Player() {
 
         <div className="queue-container">
           <h2 className="queue-title">Kolejka</h2>
-          <div className="queue-list">
+          <div className="queue-list" role="list" aria-label="Lista utworów w kolejce">
             {queueData && queueData.queue && queueData.queue.length > 0 ? (
               queueData.queue.slice(0, 10).map((queueTrack, index) => (
                 <QueueItem 
@@ -502,7 +504,7 @@ export default function Player() {
                 />
               ))
             ) : (
-              <div className="queue-item is-visible">
+              <div className="queue-item is-visible" role="listitem">
                 <div className="queue-item-info">
                   <div className="queue-item-title">Kolejka jest pusta</div>
                   <div className="queue-item-artist">Dodaj utwory do kolejki w aplikacji Spotify</div>
@@ -517,7 +519,7 @@ export default function Player() {
           {track && track.artist_image && (
             <div className="featured-artist-card">
               <img src={track.artist_image} alt={`Zdjęcie artysty - ${track.artist_main}`} className="featured-artist-img" />
-              <div className="featured-artist-gradient"></div>
+              <div className="featured-artist-gradient" aria-hidden="true"></div>
               <div className="featured-artist-info">
                 <div className="featured-artist-title">{track.artist_main}</div>
                 <div className="featured-artist-subtitle">Artysta</div>
@@ -528,7 +530,7 @@ export default function Player() {
           {/* Prawa strona - siatka albumów */}
           <div className="album-grid-container">
             <h2 className="album-grid-title">Albumy</h2>
-            <div className="album-grid">
+            <div className="album-grid" role="grid" aria-label="Albumy artysty">
               {artistAlbums.map(album => (
                 <div 
                   className="album-card" 
@@ -554,15 +556,15 @@ export default function Player() {
         </div>
       </main>
 
-      <footer className={`controls-row ${isScrolled ? 'scrolled' : ''}`}>
+      <footer className={`controls-row ${isScrolled ? 'scrolled' : ''}`} role="contentinfo">
         <div className="now-playing-bar">
-          <img src={track.image} alt="" className="now-playing-art" />
+          <img src={track.image} alt="" className="now-playing-art" aria-hidden="true" />
           <div className="now-playing-info">
             <div className="now-playing-title">{track.track}</div>
             <div className="now-playing-artist">{track.artist}</div>
           </div>
         </div>
-        <div className="controls">
+        <div className="controls" role="group" aria-label="Kontrolki odtwarzania">
           <IconButton
             onClick={handleShuffleClick}
             defaultIcon={shuffleOn ? ShuffleOn : ShuffleIcon}

@@ -13,13 +13,13 @@ export default function AboutPage() {
     }
 
   return (
-    <div className="about-page">
+    <div className="about-page" role="main">
         <div className="navbar-container">
-            <div className="about-nav">
-                <a href="/login" className="back-link">
+            <nav className="about-nav" role="navigation" aria-label="Nawigacja">
+                <a href="/login" className="back-link" aria-label="Powrót do strony logowania">
                 Powrót
                 </a>
-            </div>
+            </nav>
         </div>
       <div className="about-container">
         {/* Logo */}
@@ -33,7 +33,7 @@ export default function AboutPage() {
 
         {/* Opis aplikacji */}
         <div className="about-description">
-          <h2>O Aplikacji</h2>
+          <h1>O Aplikacji</h1>
           <p>
             <b>Music.</b> to eksperymentalna aplikacja webowa, której celem jest umożliwienie wygodniejszego sterowania muzyką na Spotify osobom z niepełnosprawnościami.
             <br></br>
@@ -80,20 +80,20 @@ export default function AboutPage() {
           <h2>Gesty</h2>
           <div className="about-gestures-container">
             <div className="about-gestures">
-                <img src={Button} alt="Przycisk Gesty" />
+                <img src={Button} alt="Przycisk włączania gestów w aplikacji" />
             </div>
             <p>
-                Funkcja gestów jest możliwa do włączenia w odtwarzaczu muzyki przyciskiem “Gesty”.
+                Funkcja gestów jest możliwa do włączenia w odtwarzaczu muzyki przyciskiem "Gesty".
             </p>
           </div>
 
           <div className="about-gestures-container">
-            <h3>Gest “Play”</h3>
+            <h3>Gest "Play"</h3>
             <div className="about-gestures">
-                <img src={Play} alt="Przycisk Gesty" />
+                <img src={Play} alt="Ilustracja gestu Play - sekwencja otwarta dłoń, zamknięta dłoń, otwarta dłoń" />
             </div>
             <p>
-            Gest “Play” służy do wznowienia lub zatrzymania muzyki. Aby go wykonać należy przed kamerą wykonać następującą sekwencję:
+            Gest "Play" służy do wznowienia lub zatrzymania muzyki. Aby go wykonać należy przed kamerą wykonać następującą sekwencję:
             <ol>
               <li>Otwarta dłoń</li>
               <li>Zamknięta dłoń</li>       
@@ -103,12 +103,12 @@ export default function AboutPage() {
           </div>
 
           <div className="about-gestures-container">
-            <h3>Gest “Next”</h3>
+            <h3>Gest "Next"</h3>
             <div className="about-gestures">
-                <img src={Next} alt="Przycisk Gesty" />
+                <img src={Next} alt="Ilustracja gestu Next - sekwencja zamknięta dłoń, dłoń z palcem wskazującym, otwarta dłoń" />
             </div>
             <p>
-            Gest “Next” służy do przewinięcia piosenki do kolejnej. Aby go wykonać należy przed kamerą wykonać następującą sekwencje:
+            Gest "Next" służy do przewinięcia piosenki do kolejnej. Aby go wykonać należy przed kamerą wykonać następującą sekwencje:
             <ol>
               <li>Zamknięta dłoń</li>
               <li>Dłoń z wysuniętym palcem wskazującym</li>       
@@ -118,12 +118,12 @@ export default function AboutPage() {
           </div>
 
           <div className="about-gestures-container">
-            <h3>Gest “Previous”</h3>
+            <h3>Gest "Previous"</h3>
             <div className="about-gestures">
-                <img src={Previous} alt="Przycisk Gesty" />
+                <img src={Previous} alt="Ilustracja gestu Previous - sekwencja otwarta dłoń, dłoń z palcem wskazującym, zamknięta dłoń" />
             </div>
             <p>
-            Gest “Previous” służy do przewinięcia piosenki do poprzedniej. Aby go wykonać należy przed kamerą wykonać następującą sekwencje:
+            Gest "Previous" służy do przewinięcia piosenki do poprzedniej. Aby go wykonać należy przed kamerą wykonać następującą sekwencje:
             <ol>
               <li>Otwarta dłoń</li>
               <li>Dłoń z wysuniętym palcem wskazującym</li>       

@@ -148,7 +148,7 @@ export default function HomePage({ currentView = 'home', onViewChange = () => {}
   const playHoverIcon = isPlaying ? PlayActive : ResumeActive;
 
   return (
-    <div className="homepage-root">
+    <div className="homepage-root" role="main">
       <TopNav currentView={currentView} onViewChange={onViewChange} />
       <div className="homepage-main-album">
         {mainAlbum ? (
@@ -165,9 +165,9 @@ export default function HomePage({ currentView = 'home', onViewChange = () => {}
             }}
             style={{ cursor: 'pointer' }}
           >
-            <img src={mainAlbum.image} alt={mainAlbum.title} className="homepage-main-album-img" />
+            <img src={mainAlbum.image} alt={`Okładka albumu ${mainAlbum.name}`} className="homepage-main-album-img" />
             <div className="homepage-main-album-info">
-              <div className="homepage-main-album-title">{mainAlbum.name}</div>
+              <h1 className="homepage-main-album-title">{mainAlbum.name}</h1>
               <div className="homepage-main-album-author">{mainAlbum.author || ''}</div>
             </div>
           </div>
@@ -176,58 +176,62 @@ export default function HomePage({ currentView = 'home', onViewChange = () => {}
         )}
       </div>
 
-      <div className="homepage-album-row-title">Biblioteka</div>
-      {albumRows.map((row, rowIndex) => (
-        <div className="homepage-album-row" key={rowIndex}>
-          {row.map(album => (
-            <div className="homepage-album-card" key={album.id}
-            onClick={() => handlePlayAlbum(album.id)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Odtwórz album ${album.name}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handlePlayAlbum(album.id);
-              }
-            }}>
-              <img src={album.image} alt={album.name} className="homepage-album-img" />
-              <div className="homepage-album-title">{album.name}</div>
-              <div className="homepage-album-author">{album.author}</div>
-            </div>
-          ))}
-        </div>
-      ))}
+      <section>
+        <h2 className="homepage-album-row-title">Biblioteka</h2>
+        {albumRows.map((row, rowIndex) => (
+          <div className="homepage-album-row" key={rowIndex} role="list" aria-label="Albumy z biblioteki">
+            {row.map(album => (
+              <div className="homepage-album-card" key={album.id}
+              onClick={() => handlePlayAlbum(album.id)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Odtwórz album ${album.name}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handlePlayAlbum(album.id);
+                }
+              }}>
+                <img src={album.image} alt={`Okładka albumu ${album.name}`} className="homepage-album-img" />
+                <div className="homepage-album-title">{album.name}</div>
+                <div className="homepage-album-author">{album.author}</div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </section>
 
-      <div className="homepage-album-row-title">Nowe wydania</div>
-      {newReleasesRows.map((row, rowIndex) => (
-        <div className="homepage-album-row" key={rowIndex}>
-          {row.map(album => (
-            <div className="homepage-album-card" key={album.id}
-            onClick={() => handlePlayAlbum(album.id)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Odtwórz album ${album.name}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handlePlayAlbum(album.id);
-              }
-            }}
-          >
-              <img src={album.image} alt={album.name} className="homepage-album-img" />
-              <div className="homepage-album-title">{album.name}</div>
-              <div className="homepage-album-author">{album.author}</div>
-            </div>
-          ))}
-        </div>
-      ))}
+      <section>
+        <h2 className="homepage-album-row-title">Nowe wydania</h2>
+        {newReleasesRows.map((row, rowIndex) => (
+          <div className="homepage-album-row" key={rowIndex} role="list" aria-label="Nowe wydania">
+            {row.map(album => (
+              <div className="homepage-album-card" key={album.id}
+              onClick={() => handlePlayAlbum(album.id)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Odtwórz album ${album.name}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handlePlayAlbum(album.id);
+                }
+              }}
+            >
+                <img src={album.image} alt={`Okładka albumu ${album.name}`} className="homepage-album-img" />
+                <div className="homepage-album-title">{album.name}</div>
+                <div className="homepage-album-author">{album.author}</div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </section>
 
       {/* Pasek kontrolny na dole */}
       {track && (
-        <footer className="controls-row scrolled">
+        <footer className="controls-row scrolled" role="contentinfo">
           <div className="now-playing-bar">
-            <img src={track.image} alt="" className="now-playing-art" />
+            <img src={track.image} alt="" className="now-playing-art" aria-hidden="true" />
             <div className="now-playing-info">
               <div className="now-playing-title"
               onClick={handleSwitchToPlayer}
@@ -245,7 +249,7 @@ export default function HomePage({ currentView = 'home', onViewChange = () => {}
               <div className="now-playing-artist">{track.artist}</div>
             </div>
           </div>
-          <div className="controls">
+          <div className="controls" role="group" aria-label="Kontrolki odtwarzania">
             <IconButton
               onClick={handleShuffleClick}
               defaultIcon={shuffleOn ? ShuffleOn : ShuffleIcon}

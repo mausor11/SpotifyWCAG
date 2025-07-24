@@ -128,21 +128,20 @@ export default function RecentlyPlayed({ currentView, onViewChange }) {
   const playHoverIcon = isPlaying ? PlayActive : ResumeActive;
 
   return (
-    <div className="homepage-root">
+    <div className="recently-played-root" role="main">
       <TopNav currentView={currentView} onViewChange={onViewChange} />
-      
       <div className="recently-played-header">
         <h1>Ostatnio grane</h1>
         <p>Twoje ostatnio odtwarzane utwory</p>
       </div>
 
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
+        <div className="loading-container" role="status" aria-live="polite">
+          <div className="loading-spinner" aria-hidden="true"></div>
           <p>Ładowanie ostatnio granych...</p>
         </div>
       ) : (
-        <div className="recently-played-tracks">
+        <div className="recently-played-tracks" role="list" aria-label="Lista ostatnio granych utworów">
           {recentTracks.length > 0 ? (
             recentTracks.map((trackItem, index) => (
               <div 
@@ -151,7 +150,7 @@ export default function RecentlyPlayed({ currentView, onViewChange }) {
                 onClick={() => handlePlayTrack(trackItem.id)}
                 role="button"
                 tabIndex={0}
-                aria-label={`Odtwórz ${trackItem.name}`}
+                aria-label={`Odtwórz ${trackItem.name} - ${trackItem.artist}`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -159,10 +158,10 @@ export default function RecentlyPlayed({ currentView, onViewChange }) {
                   }
                 }}
               >
-                <div className="track-number">{index + 1}</div>
+                <div className="track-number" aria-label={`Pozycja ${index + 1}`}>{index + 1}</div>
                 <img 
                   src={trackItem.image} 
-                  alt={trackItem.name} 
+                  alt={`Okładka albumu - ${trackItem.name}`} 
                   className="track-image" 
                 />
                 <div className="track-info">
@@ -170,11 +169,11 @@ export default function RecentlyPlayed({ currentView, onViewChange }) {
                   <div className="track-artist">{trackItem.artist}</div>
                 </div>
                 <div className="track-album">{trackItem.album}</div>
-                <div className="track-duration">{trackItem.duration}</div>
+                <div className="track-duration" aria-label={`Czas trwania: ${trackItem.duration}`}>{trackItem.duration}</div>
               </div>
             ))
           ) : (
-            <div className="no-tracks">
+            <div className="no-tracks" role="status" aria-live="polite">
               <p>Brak ostatnio granych utworów</p>
             </div>
           )}
@@ -183,9 +182,9 @@ export default function RecentlyPlayed({ currentView, onViewChange }) {
 
       {/* Pasek kontrolny na dole */}
       {track && (
-        <footer className="controls-row scrolled">
+        <footer className="controls-row scrolled" role="contentinfo">
           <div className="now-playing-bar">
-            <img src={track.image} alt="" className="now-playing-art" />
+            <img src={track.image} alt="" className="now-playing-art" aria-hidden="true" />
             <div className="now-playing-info">
             <div className="now-playing-title"
               onClick={handleSwitchToPlayer}
@@ -203,7 +202,7 @@ export default function RecentlyPlayed({ currentView, onViewChange }) {
               <div className="now-playing-artist">{track.artist}</div>
             </div>
           </div>
-          <div className="controls">
+          <div className="controls" role="group" aria-label="Kontrolki odtwarzania">
             <IconButton
               onClick={handleShuffleClick}
               defaultIcon={shuffleOn ? ShuffleOn : ShuffleIcon}

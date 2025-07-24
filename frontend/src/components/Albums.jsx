@@ -136,7 +136,7 @@ export default function Albums({ currentView, onViewChange }) {
   const playHoverIcon = isPlaying ? PlayActive : ResumeActive;
 
   return (
-    <div className="homepage-root">
+    <div className="albums-root" role="main">
       <TopNav currentView={currentView} onViewChange={onViewChange} />
       
       <div className="albums-header">
@@ -145,15 +145,15 @@ export default function Albums({ currentView, onViewChange }) {
       </div>
 
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
+        <div className="loading-container" role="status" aria-live="polite">
+          <div className="loading-spinner" aria-hidden="true"></div>
           <p>Ładowanie albumów...</p>
         </div>
       ) : (
         <div className="albums-content">
           {albums.length > 0 ? (
             albumRows.map((row, rowIndex) => (
-              <div className="homepage-album-row" key={rowIndex}>
+              <div className="homepage-album-row" key={rowIndex} role="list" aria-label="Albumy z biblioteki">
                 {row.map(album => (
                   <div 
                     className="homepage-album-card" 
@@ -169,7 +169,7 @@ export default function Albums({ currentView, onViewChange }) {
                       }
                     }}
                   >
-                    <img src={album.image} alt={album.name} className="homepage-album-img" />
+                    <img src={album.image} alt={`Okładka albumu ${album.name}`} className="homepage-album-img" />
                     <div className="homepage-album-title">{album.name}</div>
                     <div className="homepage-album-author">{album.author}</div>
                   </div>
@@ -177,7 +177,7 @@ export default function Albums({ currentView, onViewChange }) {
               </div>
             ))
           ) : (
-            <div className="no-albums">
+            <div className="no-albums" role="status" aria-live="polite">
               <p>Brak albumów w bibliotece</p>
             </div>
           )}
@@ -186,9 +186,9 @@ export default function Albums({ currentView, onViewChange }) {
 
       {/* Pasek kontrolny na dole */}
       {track && (
-        <footer className="controls-row scrolled">
+        <footer className="controls-row scrolled" role="contentinfo">
           <div className="now-playing-bar">
-            <img src={track.image} alt="" className="now-playing-art" />
+            <img src={track.image} alt="" className="now-playing-art" aria-hidden="true" />
             <div className="now-playing-info">
             <div className="now-playing-title"
               onClick={handleSwitchToPlayer}
@@ -206,7 +206,7 @@ export default function Albums({ currentView, onViewChange }) {
               <div className="now-playing-artist">{track.artist}</div>
             </div>
           </div>
-          <div className="controls">
+          <div className="controls" role="group" aria-label="Kontrolki odtwarzania">
             <IconButton
               onClick={handleShuffleClick}
               defaultIcon={shuffleOn ? ShuffleOn : ShuffleIcon}

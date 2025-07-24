@@ -49,8 +49,12 @@ function QueueItem({ track, index, onPlay, trackImage }) {
       onClick={() => onPlay(index)}
       role="button"
       tabIndex="0"
+      aria-label={`Odtwórz ${trackName} - ${artistName}, pozycja ${index + 1} w kolejce`}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') onPlay(index);
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onPlay(index);
+        }
       }}
     >
       <img src={imageUrl} alt={`Okładka albumu - ${trackName}`} className="queue-item-art" />
@@ -58,7 +62,9 @@ function QueueItem({ track, index, onPlay, trackImage }) {
         <div className="queue-item-title">{trackName}</div>
         <div className="queue-item-artist">{artistName}</div>
       </div>
-      <div className="queue-item-duration">{formatDuration(track.duration_ms)}</div>
+      <div className="queue-item-duration" aria-label={`Czas trwania: ${formatDuration(track.duration_ms)}`}>
+        {formatDuration(track.duration_ms)}
+      </div>
     </div>
   );
 }
